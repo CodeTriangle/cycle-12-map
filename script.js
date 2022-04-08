@@ -19,7 +19,7 @@ window.onload = (event) => {
 
     data.c = data.mapElement.getContext("2d");
 
-    updateCoordsDisplay();
+    updateCoordsDisplayCenter();
 
     window.onresize = (e) => {
         resizeCanvas();
@@ -55,6 +55,7 @@ window.onload = (event) => {
     });
 
     data.mapElement.onmousemove = (e) => {
+        updateCoordsDisplayWithScreenCoords(e.clientX, e.clientY);
         handleMouseMove(e.clientX, e.clientY);
     }
 
@@ -63,7 +64,9 @@ window.onload = (event) => {
 
         switch (e.touches.length) {
             case 1:
-                handleMouseMove(e.touches.item(0).clientX, e.touches.item(0).clientY);
+                const touch = e.touches.item(0);
+                updateCoordsDisplayWithScreenCoords(touch.clientX, touch.clientY);
+                handleMouseMove(touch.clientX, touch.clientY);
                 break;
             case 2:
                 const first = e.touches.item(0);
@@ -154,7 +157,6 @@ function handleMouseMove(x, y) {
     data.mouseX = x;
     data.mouseY = y;
 
-    updateCoordsDisplay();
     drawCanvas();
 }
 
@@ -216,9 +218,17 @@ function drawCanvas() {
     }
 }
 
-function updateCoordsDisplay() {
-    let [x, y] = screenToMapCoords(data.mapWidth / 2, data.mapHeight / 2);
+function updateCoordsDisplay(x, y) {
     data.coordsElement.innerText = `(${x}, ${y})`;
+}
+
+function updateCoordsDisplayWithScreenCoords(sx, sy) {
+    let [x, y] = screenToMapCoords(sx, sy);
+    updateCoordsDisplay(x, y);
+}
+
+function updateCoordsDisplayCenter() {
+    updateCoordsDisplayWithScreenCoords(data.mapWidth / 2, data.mapHeight / 2);
 }
 
 function screenToMapCoords(x, y) {
