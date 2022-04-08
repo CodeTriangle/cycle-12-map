@@ -4,6 +4,7 @@ window.onload = (event) => {
     data.mapElement = document.getElementById("map");
     data.descElement = document.getElementById("description");
     data.imgsElement = document.getElementById("images");
+    data.coordsElement = document.getElementById("coords");
     data.locations = {};
 
     addLocations(locations);
@@ -17,6 +18,8 @@ window.onload = (event) => {
     data.tileOriginY = data.mapHeight / 2 - data.tileWidth / 2;
 
     data.c = data.mapElement.getContext("2d");
+
+    updateCoordsDisplay();
 
     window.onresize = (e) => {
         resizeCanvas();
@@ -45,6 +48,8 @@ window.onload = (event) => {
 
         data.mouseX = e.clientX;
         data.mouseY = e.clientY;
+
+        updateCoordsDisplay();
         drawCanvas();
     }
 
@@ -113,17 +118,22 @@ function drawCanvas() {
     for (const loc of Object.values(data.locations)) {
         data.c.drawImage(
             loc.element,
-            data.tileOriginX - loc.x * data.tileWidth,
-            data.tileOriginY + loc.y * data.tileHeight,
+            data.tileOriginX + loc.x * data.tileWidth,
+            data.tileOriginY - loc.y * data.tileHeight,
             data.tileWidth,
             data.tileHeight
         );
     }
 }
 
+function updateCoordsDisplay() {
+    let [x, y] = screenToMapCoords(data.mapWidth / 2, data.mapHeight / 2);
+    data.coordsElement.innerText = `(${x}, ${y})`;
+}
+
 function screenToMapCoords(x, y) {
     return [
-        Math.ceil((data.tileOriginX - x) / data.tileWidth),
+        Math.floor((x - data.tileOriginX) / data.tileWidth),
         Math.ceil((data.tileOriginY - y) / data.tileHeight)
     ];
 }

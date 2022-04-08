@@ -16,6 +16,17 @@ html, body, #description {
     width: 50%;
 }
 
+#coords {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    z-index: 2;
+    background-color: #0008;
+    color: #fff;
+    padding: 5pt 15pt;
+    border-radius: 6px;
+}
+
 #description img {
     width: 100%;
 }
