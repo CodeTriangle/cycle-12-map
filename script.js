@@ -33,25 +33,56 @@ window.onload = (event) => {
     }
 
     data.mapElement.onmousedown = (e) => {
-        data.mouseDown = true;
-        data.mouseDownTime = (new Date()).getTime();
-
-        data.mouseX = e.clientX;
-        data.mouseY = e.clientY;
+        handleMouseDown(e.clientX, e.clientY);
     }
+
+    data.mapElement.addEventListener("touchstart", (e) => {
+        e.preventDefault();
+
+        switch (e.touches.length) {
+            case 1: 
+                handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
+                break;
+            case 2:
+                mouseOut();
+                const first = data.firstTouch = e.touches.item(0);
+                const second = data.firstTouch = e.touches.item(1);
+                data.pinchDist = Math.sqrt(
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                );
+                break;
+        }
+    });
 
     data.mapElement.onmousemove = (e) => {
-        if (!data.mouseDown) return;
-
-        data.tileOriginX += e.clientX - data.mouseX;
-        data.tileOriginY += e.clientY - data.mouseY;
-
-        data.mouseX = e.clientX;
-        data.mouseY = e.clientY;
-
-        updateCoordsDisplay();
-        drawCanvas();
+        handleMouseMove(e.clientX, e.clientY);
     }
+
+    data.mapElement.addEventListener("touchmove", (e) => {
+        e.preventDefault();
+
+        switch (e.touches.length) {
+            case 1:
+                handleMouseMove(e.touches.item(0).clientX, e.touches.item(0).clientY);
+                break;
+            case 2:
+                const first = e.touches.item(0);
+                const second = e.touches.item(1);
+
+                const newPinchDist = Math.sqrt(
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                );
+
+                scaleCanvas(newPinchDist / data.pinchDist);
+                drawCanvas();
+
+                data.firstTouch = first;
+                data.secondTouch = second;
+                data.pinchDist = newPinchDist;
+
+                break;
+        }
+    });
 
     data.mapElement.onmouseup = (e) => {
         mouseOut();
@@ -62,6 +93,20 @@ window.onload = (event) => {
         }
     }
 
+    data.mapElement.addEventListener("touchend", (e) => {
+        e.preventDefault();
+
+        switch (e.touches.length) {
+            case 0:
+                mouseOut();
+                const deltaTime = (new Date()).getTime() - data.mouseDownTime;
+
+                if (deltaTime < 250) {
+                    mouseClick();
+                }
+                break;
+        }
+    });
     data.mapElement.onmouseleave = (e) => {
         mouseOut();
     }
@@ -87,6 +132,27 @@ function previewTile() {
         img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
         data.descElement.appendChild(img);
     }
+}
+
+function handleMouseDown(x, y) {
+    data.mouseDown = true;
+    data.mouseDownTime = (new Date()).getTime();
+
+    data.mouseX = x;
+    data.mouseY = y;
+}
+
+function handleMouseMove(x, y) {
+    if (!data.mouseDown) return;
+
+    data.tileOriginX += x - data.mouseX;
+    data.tileOriginY += y - data.mouseY;
+
+    data.mouseX = x;
+    data.mouseY = y;
+
+    updateCoordsDisplay();
+    drawCanvas();
 }
 
 function mouseOut() {
