@@ -18,10 +18,13 @@ window.onload = (event) => {
     data.descElement = document.getElementById("description");
     data.imgsElement = document.getElementById("images");
     data.coordsElement = document.getElementById("coords");
+    data.c = data.mapElement.getContext("2d");
 
     // this stores lots of data about different tiles
     // see locations.js for the structure of location objects
     data.locations = {};
+
+    data.previousHoverCoords = [null, null];
 
     // this comes from locations.js
     addLocations(locations);
@@ -45,6 +48,7 @@ window.onload = (event) => {
     window.onresize = (e) => {
         resizeCanvas();
         drawCanvas();
+        drawHover(data.mouseX, data.mouseY, true);
     }
 
     // on scroll wheel we zoom in.
@@ -52,6 +56,7 @@ window.onload = (event) => {
         const factor = e.deltaY < 0 ? ZOOM_IN_FACTOR : ZOOM_OUT_FACTOR;
         scaleCanvas(factor, [e.clientX, e.clientY]);
         drawCanvas();
+        drawHover(e.clientX, e.clientY, true);
     }
 
     // here begin a whole bunch of mouse functions.
@@ -70,8 +75,9 @@ window.onload = (event) => {
         e.preventDefault();
 
         switch (e.touches.length) {
-            case 1: 
+            case 1:
                 handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
+                drawHover(e.touches.item(0).clientX, e.touches.item(0).clientY)
                 break;
             case 2:
                 mouseOut();
@@ -80,7 +86,7 @@ window.onload = (event) => {
                 // pinchDist stores the distance between the fingers
                 // we can use this to calculate the scale factor
                 data.pinchDist = Math.sqrt(
-                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2
                 );
                 break;
         }
@@ -89,6 +95,7 @@ window.onload = (event) => {
     data.mapElement.onmousemove = (e) => {
         // each time we move the mouse we need to change the displayed coordinates
         updateCoordsDisplayWithScreenCoords(e.clientX, e.clientY);
+        drawHover(e.clientX, e.clientY);
         handleMouseMove(e.clientX, e.clientY);
     }
 
@@ -107,7 +114,7 @@ window.onload = (event) => {
                 const second = e.touches.item(1);
 
                 const newPinchDist = Math.sqrt(
-                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2
                 );
 
                 // average the x and y values to get the center point
@@ -118,6 +125,7 @@ window.onload = (event) => {
                 // it's just the ratio between the two.
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
                 drawCanvas();
+                drawHover(first.clientX, first.clientY, true);
 
                 // i don't actually use these variables, lol
                 // they might be useful in the future though
@@ -205,6 +213,7 @@ function handleMouseMove(x, y) {
     data.mouseY = y;
 
     drawCanvas();
+    drawHover(data.mouseX, data.mouseY, true);
 }
 
 // when the mouse leaves the screen or stops being held.
@@ -219,7 +228,7 @@ function scaleCanvas(factor, center) {
     // first we need to calculate what the new tile widths will be.
     let newWidth = data.tileWidth * factor;
     let newHeight = data.tileHeight * factor;
-    
+
     // get these as variables
     // my code has a weird mix of passing in x and y separately vs as a list
     // i should do something about that
@@ -238,7 +247,7 @@ function scaleCanvas(factor, center) {
         const newFactorX = newWidth / data.tileWidth;
 
         data.tileWidth = newWidth;
-        
+
         // Origin TO CX
         // basically the x distance between origin and cx.
         const otocx = cx - data.tileOriginX;
@@ -263,7 +272,7 @@ function scaleCanvas(factor, center) {
 function resizeCanvas() {
     // you have to set the `width` and `height` html attributes to resize a canvas.
     const newWidth = data.mapElement.width = window.innerWidth;
-    const newHeight =  data.mapElement.height = window.innerHeight;
+    const newHeight = data.mapElement.height = window.innerHeight;
 
     // fires only if the map been drawn before
     if (typeof data.mapWidth !== 'undefined') {
@@ -279,17 +288,15 @@ function resizeCanvas() {
 
 // draw on the canvas
 function drawCanvas() {
-    const c = data.mapElement.getContext("2d");
-
     // fill background
-    c.fillStyle = "#333";
-    c.fillRect(0, 0, data.mapWidth, data.mapHeight);
+    data.c.fillStyle = "#333";
+    data.c.fillRect(0, 0, data.mapWidth, data.mapHeight);
 
     // for each location, draw it at the right place
     // notably, y had to be inverted because canvas' y counts from the top
     // corner and i wanted normal quandrants.
     for (const loc of Object.values(data.locations)) {
-        c.drawImage(
+        data.c.drawImage(
             loc.element,
             data.tileOriginX + loc.x * data.tileWidth,
             data.tileOriginY - loc.y * data.tileHeight,
@@ -300,6 +307,30 @@ function drawCanvas() {
 }
 
 // update coordinate display in the top left corner
+// Draws a border around the active image
+function drawHover(x, y, hold = false) {
+    let loc = screenToMapCoords(x, y)
+    let prev = data.previousHoverCoords
+
+    if (hold)
+        loc = prev;
+
+    // Square should remain stationary (held) in certain circumstances
+    if (hold || !(prev[0] == loc[0] && prev[1] == loc[1])) {
+        drawCanvas();
+        data.c.beginPath();
+        data.c.lineWidth = "3";
+        data.c.rect(
+            data.tileOriginX + loc[0] * data.tileWidth,
+            data.tileOriginY - loc[1] * data.tileHeight,
+            data.tileWidth,
+            data.tileHeight
+        );
+        data.c.stroke()
+        data.previousHoverCoords = loc
+    }
+}
+
 function updateCoordsDisplay(x, y) {
     data.coordsElement.innerText = `(${x}, ${y})`;
 }
