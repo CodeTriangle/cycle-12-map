@@ -73,7 +73,10 @@ window.onload = (event) => {
                     (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
                 );
 
-                scaleCanvas(newPinchDist / data.pinchDist);
+                const cx = (first.clientX + second.clientX) / 2;
+                const cy = (first.clientY + second.clientY) / 2;
+
+                scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
                 drawCanvas();
 
                 data.firstTouch = first;
