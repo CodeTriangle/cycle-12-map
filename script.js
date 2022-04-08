@@ -68,15 +68,25 @@ window.onload = (event) => {
 }
 
 function mouseClick() {
+    previewTile(screenToMapCoords(data.mouseX, data.mouseY));
+}
+
+function previewTile() {
+    let coords = arguments[0]
+    if (arguments.length == 2) {
+        coords = [arguments[0], arguments[1]];
+    }
+
     data.descElement.style.display = "block";
     if (data.descElement.children.length > 0) {
         data.descElement.children[0].remove();
     }
-    const img = document.createElement("img");
-    const coords = screenToMapCoords(data.mouseX, data.mouseY);
-    img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
 
-    data.descElement.appendChild(img);
+    if (data.locations.hasOwnProperty(coords)) {
+        const img = document.createElement("img");
+        img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
+        data.descElement.appendChild(img);
+    }
 }
 
 function mouseOut() {

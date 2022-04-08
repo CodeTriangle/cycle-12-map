@@ -9,11 +9,8 @@ html, body, #description {
 
 #description {
     position: absolute;
-    top: 10px;
-    right: 10px;
     z-index: 2;
     display: none;
-    width: 50%;
 }
 
 #coords {
@@ -44,4 +41,24 @@ html, body, #description {
     top: 0;
     left: 0;
     z-index: 1;
+}
+
+@media screen and (min-width: 421px) {
+    #description {
+        top: 10px;
+        right: 10px;
+        width: 40%;
+        max-width: 750px;
+        min-width: 400px;
+    }
+}
+
+@media screen and (max-width: 420px) {
+    #description {
+        bottom: 10px;
+        right: 10px;
+        width: 90%;
+        max-width: inherit;
+        min-width: inherit;
+    }
 }
