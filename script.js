@@ -28,7 +28,7 @@ window.onload = (event) => {
 
     document.body.onwheel = (e) => {
         const factor = e.deltaY < 0 ? 1.1 : 0.9;
-        scaleCanvas(factor);
+        scaleCanvas(factor, [e.clientX, e.clientY]);
         drawCanvas();
     }
 
@@ -159,19 +159,30 @@ function mouseOut() {
     data.mouseDown = false;
 }
 
-function scaleCanvas(factor) {
+function scaleCanvas(factor, center) {
     let newWidth = data.tileWidth * factor;
     let newHeight = data.tileHeight * factor;
+    const [cx, cy] = center;
     if (newWidth > 300) newWidth = 300;
     if (newHeight > 300) newHeight = 300;
     if (newWidth < 40) newWidth = 40
     if (newHeight < 40) newHeight = 40;
-    const deltaWidth = newWidth - data.tileWidth;
-    const deltaHeight = newWidth - data.tileWidth;
-    data.tileWidth = newWidth;
-    data.tileHeight = newHeight;
-    data.tileOriginX -= deltaWidth / 2;
-    data.tileOriginY -= deltaHeight / 2;
+    // const deltaWidth = newWidth - data.tileWidth;
+    // const deltaHeight = newWidth - data.tileWidth;
+
+    if (data.tileWidth != newWidth) {
+        const newFactorX = newWidth / data.tileWidth;
+        data.tileWidth = newWidth;
+        const otocx = cx - data.tileOriginX;
+        data.tileOriginX = cx - otocx * newFactorX;
+    }
+
+    if (data.tileHeight != newHeight) {
+        const newFactorY = newHeight / data.tileHeight;
+        data.tileHeight = newHeight;
+        const otocy = cy - data.tileOriginY;
+        data.tileOriginY = cy - otocy * newFactorY;
+    }
 }
 
 function resizeCanvas() {
