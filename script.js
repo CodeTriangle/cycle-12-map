@@ -4,13 +4,9 @@ window.onload = (event) => {
     data.mapElement = document.getElementById("map");
     data.descElement = document.getElementById("description");
     data.imgsElement = document.getElementById("images");
+    data.locations = {};
 
-    data.tile = document.createElement("img");
-    data.tile.setAttribute("src", "img.png");
-    data.tile.onload = (e) => {
-        drawCanvas();
-    }
-    data.imgsElement.appendChild(data.tile);
+    addLocations(locations);
 
     resizeCanvas();
 
@@ -52,17 +48,34 @@ window.onload = (event) => {
         drawCanvas();
     }
 
-    data.mapElement.onmouseup = mouseOut;
-    data.mapElement.onmouseleave = mouseOut;
+    data.mapElement.onmouseup = (e) => {
+        mouseOut();
+        const deltaTime = (new Date()).getTime() - data.mouseDownTime;
+
+        if (deltaTime < 250) {
+            mouseClick();
+        }
+    }
+
+    data.mapElement.onmouseleave = (e) => {
+        mouseOut();
+    }
+}
+
+function mouseClick() {
+    data.descElement.style.display = "block";
+    if (data.descElement.children.length > 0) {
+        data.descElement.children[0].remove();
+    }
+    const img = document.createElement("img");
+    const coords = screenToMapCoords(data.mouseX, data.mouseY);
+    img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
+
+    data.descElement.appendChild(img);
 }
 
 function mouseOut() {
     data.mouseDown = false;
-    const deltaTime = (new Date()).getTime() - data.mouseDownTime;
-
-    if (deltaTime < 250) {
-        console.log(screenToMapCoords(data.mouseX, data.mouseY));
-    }
 }
 
 function scaleCanvas(factor) {
@@ -74,10 +87,10 @@ function scaleCanvas(factor) {
     if (newHeight < 40) newHeight = 40;
     const deltaWidth = newWidth - data.tileWidth;
     const deltaHeight = newWidth - data.tileWidth;
-    data.tileWidth = newWidth
-    data.tileHeight = newHeight
-    data.tileOriginX -= deltaWidth / 2
-    data.tileOriginY -= deltaHeight / 2
+    data.tileWidth = newWidth;
+    data.tileHeight = newHeight;
+    data.tileOriginX -= deltaWidth / 2;
+    data.tileOriginY -= deltaHeight / 2;
 }
 
 function resizeCanvas() {
@@ -86,8 +99,8 @@ function resizeCanvas() {
     if (typeof data.mapWidth !== 'undefined') {
         const deltaWidth = newWidth - data.mapWidth;
         const deltaHeight = newHeight - data.mapHeight;
-        data.tileOriginX += deltaWidth / 2
-        data.tileOriginY += deltaHeight / 2
+        data.tileOriginX += deltaWidth / 2;
+        data.tileOriginY += deltaHeight / 2;
     }
     data.mapWidth = newWidth;
     data.mapHeight = newHeight;
@@ -97,7 +110,15 @@ function drawCanvas() {
     data.c.fillStyle = "#333";
     data.c.fillRect(0, 0, data.mapWidth, data.mapHeight);
 
-    data.c.drawImage(data.tile, data.tileOriginX, data.tileOriginY, data.tileWidth, data.tileHeight);
+    for (const loc of Object.values(data.locations)) {
+        data.c.drawImage(
+            loc.element,
+            data.tileOriginX - loc.x * data.tileWidth,
+            data.tileOriginY + loc.y * data.tileHeight,
+            data.tileWidth,
+            data.tileHeight
+        );
+    }
 }
 
 function screenToMapCoords(x, y) {
@@ -105,4 +126,19 @@ function screenToMapCoords(x, y) {
         Math.ceil((data.tileOriginX - x) / data.tileWidth),
         Math.ceil((data.tileOriginY - y) / data.tileHeight)
     ];
+}
+
+function addLocations(locs) {
+    for (const loc of locs) {
+        data.locations[[loc.x, loc.y]] = loc;
+
+        const tile = document.createElement("img");
+        tile.setAttribute("src", "img/" + loc.img + ".png");
+        tile.onload = (e) => {
+            drawCanvas();
+        }
+        loc.element = tile;
+
+        data.imgsElement.appendChild(tile);
+    }
 }
