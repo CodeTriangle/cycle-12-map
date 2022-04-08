@@ -7,6 +7,8 @@ window.onload = (event) => {
     data.coordsElement = document.getElementById("coords");
     data.locations = {};
 
+    data.previousHoverCoords = [null, null];
+
     addLocations(locations);
 
     resizeCanvas();
@@ -24,12 +26,14 @@ window.onload = (event) => {
     window.onresize = (e) => {
         resizeCanvas();
         drawCanvas();
+        drawHover(data.mouseX, data.mouseY, reset = true);
     }
 
     document.body.onwheel = (e) => {
         const factor = e.deltaY < 0 ? 1.1 : 0.9;
         scaleCanvas(factor, [e.clientX, e.clientY]);
         drawCanvas();
+        drawHover(e.clientX, e.clientY, reset = true);
     }
 
     data.mapElement.onmousedown = (e) => {
@@ -40,7 +44,7 @@ window.onload = (event) => {
         e.preventDefault();
 
         switch (e.touches.length) {
-            case 1: 
+            case 1:
                 handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
                 break;
             case 2:
@@ -48,13 +52,14 @@ window.onload = (event) => {
                 const first = data.firstTouch = e.touches.item(0);
                 const second = data.firstTouch = e.touches.item(1);
                 data.pinchDist = Math.sqrt(
-                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2
                 );
                 break;
         }
     });
 
     data.mapElement.onmousemove = (e) => {
+        drawHover(e.clientX, e.clientY);
         handleMouseMove(e.clientX, e.clientY);
     }
 
@@ -70,7 +75,7 @@ window.onload = (event) => {
                 const second = e.touches.item(1);
 
                 const newPinchDist = Math.sqrt(
-                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2 
+                    (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2
                 );
 
                 const cx = (first.clientX + second.clientX) / 2;
@@ -156,6 +161,7 @@ function handleMouseMove(x, y) {
 
     updateCoordsDisplay();
     drawCanvas();
+    drawHover(data.mouseX, data.mouseY);
 }
 
 function mouseOut() {
@@ -190,7 +196,7 @@ function scaleCanvas(factor, center) {
 
 function resizeCanvas() {
     const newWidth = data.mapElement.width = window.innerWidth;
-    const newHeight =  data.mapElement.height = window.innerHeight;
+    const newHeight = data.mapElement.height = window.innerHeight;
     if (typeof data.mapWidth !== 'undefined') {
         const deltaWidth = newWidth - data.mapWidth;
         const deltaHeight = newHeight - data.mapHeight;
@@ -213,6 +219,27 @@ function drawCanvas() {
             data.tileWidth,
             data.tileHeight
         );
+    }
+}
+
+// Draws a border around the active image
+function drawHover(x, y, reset = false) {
+    let loc = screenToMapCoords(x, y)
+    let prev = data.previousHoverCoords
+
+    // Square should remain stationary if the canvas is moving
+    if (!(prev[0] == loc[0] && prev[1] == loc[1]) || data.mouseDown || reset) {
+        drawCanvas();
+        data.c.beginPath();
+        data.c.lineWidth = "3";
+        data.c.rect(
+            data.tileOriginX + loc[0] * data.tileWidth,
+            data.tileOriginY - loc[1] * data.tileHeight,
+            data.tileWidth,
+            data.tileHeight
+        );
+        data.c.stroke()
+        data.previousHoverCoords = loc
     }
 }
 
