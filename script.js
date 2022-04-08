@@ -26,14 +26,14 @@ window.onload = (event) => {
     window.onresize = (e) => {
         resizeCanvas();
         drawCanvas();
-        drawHover(data.mouseX, data.mouseY, reset = true);
+        drawHover(data.mouseX, data.mouseY, true);
     }
 
     document.body.onwheel = (e) => {
         const factor = e.deltaY < 0 ? 1.1 : 0.9;
         scaleCanvas(factor, [e.clientX, e.clientY]);
         drawCanvas();
-        drawHover(e.clientX, e.clientY, reset = true);
+        drawHover(e.clientX, e.clientY, true);
     }
 
     data.mapElement.onmousedown = (e) => {
@@ -46,6 +46,7 @@ window.onload = (event) => {
         switch (e.touches.length) {
             case 1:
                 handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
+                drawHover(e.touches.item(0).clientX, e.touches.item(0).clientY)
                 break;
             case 2:
                 mouseOut();
@@ -86,6 +87,7 @@ window.onload = (event) => {
 
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
                 drawCanvas();
+                drawHover(first.clientX, first.clientY, true);
 
                 data.firstTouch = first;
                 data.secondTouch = second;
@@ -163,7 +165,7 @@ function handleMouseMove(x, y) {
     data.mouseY = y;
 
     drawCanvas();
-    drawHover(data.mouseX, data.mouseY);
+    drawHover(data.mouseX, data.mouseY, true);
 }
 
 function mouseOut() {
@@ -225,12 +227,15 @@ function drawCanvas() {
 }
 
 // Draws a border around the active image
-function drawHover(x, y, reset = false) {
+function drawHover(x, y, hold = false) {
     let loc = screenToMapCoords(x, y)
     let prev = data.previousHoverCoords
 
-    // Square should remain stationary if the canvas is moving
-    if (!(prev[0] == loc[0] && prev[1] == loc[1]) || data.mouseDown || reset) {
+    if (hold)
+        loc = prev;
+
+    // Square should remain stationary (held) in certain circumstances
+    if (hold || !(prev[0] == loc[0] && prev[1] == loc[1])) {
         drawCanvas();
         data.c.beginPath();
         data.c.lineWidth = "3";
