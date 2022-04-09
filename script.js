@@ -198,6 +198,59 @@ function previewTile() {
     drawCanvas();
 }
 
+// don't ask
+// draws a line to the preview pane
+// the algebra was, like, ridiculous
+// i feel like garbage but it works
+// good night
+function drawLineToPreview() {
+    if (!data.hasOwnProperty("previewedCoords")) {
+        return;
+    }
+
+    const rect = data.descElement.getBoundingClientRect();
+
+    const ix = (rect.right + rect.left) / 2;
+    const iy = (rect.bottom + rect.top) / 2;
+
+    let [tx, ty] = mapToScreenCoords.apply(null, data.previewedCoords);
+
+    tx += .5 * data.tileWidth;
+    ty += .5 * data.tileHeight;
+
+    const slope = (iy - ty) / (tx - ix);
+    console.log(slope);
+
+    const xStaticEndpoint = tx + .5 * data.tileWidth * (ix < tx ? -1 : 1);
+    const yStaticEndpoint = ty + .5 * data.tileHeight * (iy < ty ? -1 : 1);
+
+    const xDynamicEndpoint = tx + 1 / slope * data.tileHeight / 2;
+    const yDynamicEndpoint = ty + slope * data.tileWidth / 2;
+
+    const xDynamicEndpointRev = tx - 1 / slope * data.tileHeight / 2;
+    const yDynamicEndpointRev = ty - slope * data.tileWidth / 2;
+
+    data.c.moveTo(ix, iy);
+    if (slope > 1) {
+        data.c.lineTo(
+            tx > ix ? xDynamicEndpointRev : xDynamicEndpoint,
+            yStaticEndpoint
+        );
+    } else if (slope > -1) {
+        data.c.lineTo(
+            xStaticEndpoint,
+            tx > ix ? yDynamicEndpoint : yDynamicEndpointRev
+        );
+    } else {
+        data.c.lineTo(
+            tx > ix ? xDynamicEndpoint : xDynamicEndpointRev,
+            yStaticEndpoint
+        );
+    }
+        
+    data.c.stroke();
+}
+
 // see function name. sets some data values.
 function handleMouseDown(x, y) {
     data.mouseDown = true;
@@ -310,10 +363,11 @@ function drawCanvas() {
     // notably, y had to be inverted because canvas' y counts from the top
     // corner and i wanted normal quandrants.
     for (const loc of Object.values(data.locations)) {
+        let [x, y] = mapToScreenCoords(loc.x, loc.y);
         data.c.drawImage(
             loc.element,
-            data.tileOriginX + loc.x * data.tileWidth,
-            data.tileOriginY - loc.y * data.tileHeight,
+            x,
+            y,
             data.tileWidth,
             data.tileHeight
         );
@@ -322,6 +376,7 @@ function drawCanvas() {
     if (data.hasOwnProperty("previewedCoords")) {
         const [px, py] = data.previewedCoords;
         drawHover(px, py, screenCoords=false, style="#6C9");
+        drawLineToPreview();
     }
 
     drawHover(data.mouseX, data.mouseY);
@@ -334,9 +389,10 @@ function drawHover(x, y, screenCoords = true, style="#000") {
     data.c.strokeStyle = style;
     data.c.beginPath();
     data.c.lineWidth = "3";
+    let [hx, hy] = mapToScreenCoords(loc[0], loc[1]);
     data.c.rect(
-        data.tileOriginX + loc[0] * data.tileWidth,
-        data.tileOriginY - loc[1] * data.tileHeight,
+        hx,
+        hy,
         data.tileWidth,
         data.tileHeight
     );
@@ -362,6 +418,14 @@ function screenToMapCoords(x, y) {
         Math.ceil((data.tileOriginY - y) / data.tileHeight)
     ];
 }
+
+function mapToScreenCoords(x, y) {
+    return [
+        data.tileOriginX + x * data.tileWidth,
+        data.tileOriginY - y * data.tileHeight,
+    ];
+}
+    
 
 // add all the locations in the list
 // right now it just turns it into an association instead of a list for better
