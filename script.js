@@ -24,8 +24,6 @@ window.onload = (event) => {
     // see locations.js for the structure of location objects
     data.locations = {};
 
-    data.previousHoverCoords = [null, null];
-
     // this comes from locations.js
     addLocations(locations);
 
@@ -48,7 +46,6 @@ window.onload = (event) => {
     window.onresize = (e) => {
         resizeCanvas();
         drawCanvas();
-        drawHover(data.mouseX, data.mouseY, true);
     }
 
     // on scroll wheel we zoom in.
@@ -56,7 +53,6 @@ window.onload = (event) => {
         const factor = e.deltaY < 0 ? ZOOM_IN_FACTOR : ZOOM_OUT_FACTOR;
         scaleCanvas(factor, [e.clientX, e.clientY]);
         drawCanvas();
-        drawHover(e.clientX, e.clientY, true);
     }
 
     // here begin a whole bunch of mouse functions.
@@ -76,8 +72,9 @@ window.onload = (event) => {
 
         switch (e.touches.length) {
             case 1:
-                handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
-                drawHover(e.touches.item(0).clientX, e.touches.item(0).clientY)
+                const touch = e.touches.item(0);
+                handleMouseDown(touch.clientX, touch.clientY);
+                drawCanvas();
                 break;
             case 2:
                 mouseOut();
@@ -94,9 +91,11 @@ window.onload = (event) => {
 
     data.mapElement.onmousemove = (e) => {
         // each time we move the mouse we need to change the displayed coordinates
-        updateCoordsDisplayWithScreenCoords(e.clientX, e.clientY);
-        drawHover(e.clientX, e.clientY);
+        updateCoordsDisplay(e.clientX, e.clientY, screenCoords=true);
+
         handleMouseMove(e.clientX, e.clientY);
+
+        drawCanvas();
     }
 
     // see above; this can mean either touch or scroll
@@ -106,7 +105,7 @@ window.onload = (event) => {
         switch (e.touches.length) {
             case 1:
                 const touch = e.touches.item(0);
-                updateCoordsDisplayWithScreenCoords(touch.clientX, touch.clientY);
+                updateCoordsDisplayWith(touch.clientX, touch.clientY, screenCoords=true);
                 handleMouseMove(touch.clientX, touch.clientY);
                 break;
             case 2:
@@ -125,7 +124,6 @@ window.onload = (event) => {
                 // it's just the ratio between the two.
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
                 drawCanvas();
-                drawHover(first.clientX, first.clientY, true);
 
                 // i don't actually use these variables, lol
                 // they might be useful in the future though
@@ -168,7 +166,16 @@ window.onload = (event) => {
 
 // highlight the tile where (data.mouseX, data.mouseY) is
 function mouseClick() {
-    previewTile(screenToMapCoords(data.mouseX, data.mouseY));
+    let coords = screenToMapCoords(data.mouseX, data.mouseY);
+
+    if (data.locations.hasOwnProperty(coords)) {
+        data.previewedCoords = coords;
+    } else {
+        delete data.previewedCoords;
+    }
+
+    previewTile(coords[0], coords[1]);
+    drawCanvas();
 }
 
 // show the preview
@@ -189,6 +196,8 @@ function previewTile() {
         const img = document.createElement("img");
         img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
         data.descElement.appendChild(img);
+    } else {
+        data.descElement.style.display = "none";
     }
 }
 
@@ -204,16 +213,15 @@ function handleMouseDown(x, y) {
 // the function to handle moving around the map.
 // basically just shifts the origin and sets some data values
 function handleMouseMove(x, y) {
+    data.mouseX = x;
+    data.mouseY = y;
+
     if (!data.mouseDown) return;
 
     data.tileOriginX += x - data.mouseX;
     data.tileOriginY += y - data.mouseY;
 
-    data.mouseX = x;
-    data.mouseY = y;
-
     drawCanvas();
-    drawHover(data.mouseX, data.mouseY, true);
 }
 
 // when the mouse leaves the screen or stops being held.
@@ -233,6 +241,9 @@ function scaleCanvas(factor, center) {
     // my code has a weird mix of passing in x and y separately vs as a list
     // i should do something about that
     const [cx, cy] = center;
+
+    data.mouseX = cx;
+    data.mouseY = cy;
 
     // if the new width would exceed the max tile size, don't
     if (newWidth > MAX_TILE_SIZE) newWidth = MAX_TILE_SIZE;
@@ -304,46 +315,40 @@ function drawCanvas() {
             data.tileHeight
         );
     }
+
+    if (data.hasOwnProperty("previewedCoords")) {
+        const [px, py] = data.previewedCoords;
+        drawHover(px, py, screenCoords=false, style="#FF0");
+    }
+
+    drawHover(data.mouseX, data.mouseY);
+}
+
+// Draws a border around the active image
+function drawHover(x, y, screenCoords = true, style="#000") {
+    let loc = screenCoords ? screenToMapCoords(x, y) : [x, y];
+
+    data.c.strokeStyle = style;
+    data.c.beginPath();
+    data.c.lineWidth = "3";
+    data.c.rect(
+        data.tileOriginX + loc[0] * data.tileWidth,
+        data.tileOriginY - loc[1] * data.tileHeight,
+        data.tileWidth,
+        data.tileHeight
+    );
+    data.c.stroke();
 }
 
 // update coordinate display in the top left corner
-// Draws a border around the active image
-function drawHover(x, y, hold = false) {
-    let loc = screenToMapCoords(x, y)
-    let prev = data.previousHoverCoords
-
-    if (hold)
-        loc = prev;
-
-    // Square should remain stationary (held) in certain circumstances
-    if (hold || !(prev[0] == loc[0] && prev[1] == loc[1])) {
-        drawCanvas();
-        data.c.beginPath();
-        data.c.lineWidth = "3";
-        data.c.rect(
-            data.tileOriginX + loc[0] * data.tileWidth,
-            data.tileOriginY - loc[1] * data.tileHeight,
-            data.tileWidth,
-            data.tileHeight
-        );
-        data.c.stroke()
-        data.previousHoverCoords = loc
-    }
-}
-
-function updateCoordsDisplay(x, y) {
-    data.coordsElement.innerText = `(${x}, ${y})`;
-}
-
-// use screen coordinates to update the coord display
-function updateCoordsDisplayWithScreenCoords(sx, sy) {
-    let [x, y] = screenToMapCoords(sx, sy);
-    updateCoordsDisplay(x, y);
+function updateCoordsDisplay(x, y, screenCoords = true) {
+    let [newX, newY] = screenCoords ? screenToMapCoords(x, y) : [x, y];
+    data.coordsElement.innerText = `(${newX}, ${newY})`;
 }
 
 // update the coords display to the center of the screen
 function updateCoordsDisplayCenter() {
-    updateCoordsDisplayWithScreenCoords(data.mapWidth / 2, data.mapHeight / 2);
+    updateCoordsDisplay(data.mapWidth / 2, data.mapHeight / 2);
 }
 
 // translate screen coordinates (in pixels) to the tile at that location.
@@ -365,6 +370,8 @@ function addLocations(locs) {
 
         const tile = document.createElement("img");
         tile.setAttribute("src", "img/" + loc.img + ".png");
+        // at this point the images haven't actually loaded yet.
+        // so we add this callback so that it adds each image when it does load.
         tile.onload = (e) => {
             drawCanvas();
         }
