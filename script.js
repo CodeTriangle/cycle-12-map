@@ -24,8 +24,6 @@ window.onload = (event) => {
     // see locations.js for the structure of location objects
     data.locations = {};
 
-    data.previousHoverCoords = [null, null];
-
     // this comes from locations.js
     addLocations(locations);
 
@@ -47,16 +45,12 @@ window.onload = (event) => {
     // on resize we tell the canvas we resized
     window.onresize = (e) => {
         resizeCanvas();
-        drawCanvas();
-        drawHover(data.mouseX, data.mouseY, true);
     }
 
     // on scroll wheel we zoom in.
     document.body.onwheel = (e) => {
         const factor = e.deltaY < 0 ? ZOOM_IN_FACTOR : ZOOM_OUT_FACTOR;
         scaleCanvas(factor, [e.clientX, e.clientY]);
-        drawCanvas();
-        drawHover(e.clientX, e.clientY, true);
     }
 
     // here begin a whole bunch of mouse functions.
@@ -76,8 +70,8 @@ window.onload = (event) => {
 
         switch (e.touches.length) {
             case 1:
-                handleMouseDown(e.touches.item(0).clientX, e.touches.item(0).clientY);
-                drawHover(e.touches.item(0).clientX, e.touches.item(0).clientY)
+                const touch = e.touches.item(0);
+                handleMouseDown(touch.clientX, touch.clientY);
                 break;
             case 2:
                 mouseOut();
@@ -94,8 +88,8 @@ window.onload = (event) => {
 
     data.mapElement.onmousemove = (e) => {
         // each time we move the mouse we need to change the displayed coordinates
-        updateCoordsDisplayWithScreenCoords(e.clientX, e.clientY);
-        drawHover(e.clientX, e.clientY);
+        updateCoordsDisplay(e.clientX, e.clientY, screenCoords=true);
+
         handleMouseMove(e.clientX, e.clientY);
     }
 
@@ -106,7 +100,7 @@ window.onload = (event) => {
         switch (e.touches.length) {
             case 1:
                 const touch = e.touches.item(0);
-                updateCoordsDisplayWithScreenCoords(touch.clientX, touch.clientY);
+                updateCoordsDisplayWith(touch.clientX, touch.clientY, screenCoords=true);
                 handleMouseMove(touch.clientX, touch.clientY);
                 break;
             case 2:
@@ -124,8 +118,6 @@ window.onload = (event) => {
                 // and here is where we calculate the scale factor.
                 // it's just the ratio between the two.
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
-                drawCanvas();
-                drawHover(first.clientX, first.clientY, true);
 
                 // i don't actually use these variables, lol
                 // they might be useful in the future though
@@ -168,7 +160,17 @@ window.onload = (event) => {
 
 // highlight the tile where (data.mouseX, data.mouseY) is
 function mouseClick() {
-    previewTile(screenToMapCoords(data.mouseX, data.mouseY));
+    let coords = screenToMapCoords(data.mouseX, data.mouseY);
+
+    if (data.locations.hasOwnProperty(coords)) {
+        data.previewedCoords = coords;
+    } else {
+        delete data.previewedCoords;
+    }
+
+    previewTile(coords[0], coords[1]);
+
+    drawCanvas();
 }
 
 // show the preview
@@ -189,7 +191,64 @@ function previewTile() {
         const img = document.createElement("img");
         img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
         data.descElement.appendChild(img);
+    } else {
+        data.descElement.style.display = "none";
     }
+
+    drawCanvas();
+}
+
+// don't ask
+// draws a line to the preview pane
+// the algebra was, like, ridiculous
+// i feel like garbage but it works
+// good night
+function drawLineToPreview() {
+    if (!data.hasOwnProperty("previewedCoords")) {
+        return;
+    }
+
+    const rect = data.descElement.getBoundingClientRect();
+
+    const ix = (rect.right + rect.left) / 2;
+    const iy = (rect.bottom + rect.top) / 2;
+
+    let [tx, ty] = mapToScreenCoords.apply(null, data.previewedCoords);
+
+    tx += .5 * data.tileWidth;
+    ty += .5 * data.tileHeight;
+
+    const slope = (iy - ty) / (tx - ix);
+    console.log(slope);
+
+    const xStaticEndpoint = tx + .5 * data.tileWidth * (ix < tx ? -1 : 1);
+    const yStaticEndpoint = ty + .5 * data.tileHeight * (iy < ty ? -1 : 1);
+
+    const xDynamicEndpoint = tx + 1 / slope * data.tileHeight / 2;
+    const yDynamicEndpoint = ty + slope * data.tileWidth / 2;
+
+    const xDynamicEndpointRev = tx - 1 / slope * data.tileHeight / 2;
+    const yDynamicEndpointRev = ty - slope * data.tileWidth / 2;
+
+    data.c.moveTo(ix, iy);
+    if (slope > 1) {
+        data.c.lineTo(
+            tx > ix ? xDynamicEndpointRev : xDynamicEndpoint,
+            yStaticEndpoint
+        );
+    } else if (slope > -1) {
+        data.c.lineTo(
+            xStaticEndpoint,
+            tx > ix ? yDynamicEndpoint : yDynamicEndpointRev
+        );
+    } else {
+        data.c.lineTo(
+            tx > ix ? xDynamicEndpoint : xDynamicEndpointRev,
+            yStaticEndpoint
+        );
+    }
+        
+    data.c.stroke();
 }
 
 // see function name. sets some data values.
@@ -199,21 +258,22 @@ function handleMouseDown(x, y) {
 
     data.mouseX = x;
     data.mouseY = y;
+
+    drawCanvas();
 }
 
 // the function to handle moving around the map.
 // basically just shifts the origin and sets some data values
 function handleMouseMove(x, y) {
-    if (!data.mouseDown) return;
-
-    data.tileOriginX += x - data.mouseX;
-    data.tileOriginY += y - data.mouseY;
+    if (data.mouseDown) {
+        data.tileOriginX += x - data.mouseX;
+        data.tileOriginY += y - data.mouseY;
+    }
 
     data.mouseX = x;
     data.mouseY = y;
 
     drawCanvas();
-    drawHover(data.mouseX, data.mouseY, true);
 }
 
 // when the mouse leaves the screen or stops being held.
@@ -233,6 +293,9 @@ function scaleCanvas(factor, center) {
     // my code has a weird mix of passing in x and y separately vs as a list
     // i should do something about that
     const [cx, cy] = center;
+
+    data.mouseX = cx;
+    data.mouseY = cy;
 
     // if the new width would exceed the max tile size, don't
     if (newWidth > MAX_TILE_SIZE) newWidth = MAX_TILE_SIZE;
@@ -266,6 +329,8 @@ function scaleCanvas(factor, center) {
         const otocy = cy - data.tileOriginY;
         data.tileOriginY = cy - otocy * newFactorY;
     }
+    
+    drawCanvas();
 }
 
 // resize the canvas to the screen size
@@ -284,6 +349,8 @@ function resizeCanvas() {
 
     data.mapWidth = newWidth;
     data.mapHeight = newHeight;
+
+    drawCanvas();
 }
 
 // draw on the canvas
@@ -296,54 +363,51 @@ function drawCanvas() {
     // notably, y had to be inverted because canvas' y counts from the top
     // corner and i wanted normal quandrants.
     for (const loc of Object.values(data.locations)) {
+        let [x, y] = mapToScreenCoords(loc.x, loc.y);
         data.c.drawImage(
             loc.element,
-            data.tileOriginX + loc.x * data.tileWidth,
-            data.tileOriginY - loc.y * data.tileHeight,
+            x,
+            y,
             data.tileWidth,
             data.tileHeight
         );
     }
+
+    if (data.hasOwnProperty("previewedCoords")) {
+        const [px, py] = data.previewedCoords;
+        drawHover(px, py, screenCoords=false, style="#6C9");
+        drawLineToPreview();
+    }
+
+    drawHover(data.mouseX, data.mouseY);
+}
+
+// Draws a border around the active image
+function drawHover(x, y, screenCoords = true, style="#000") {
+    let loc = screenCoords ? screenToMapCoords(x, y) : [x, y];
+
+    data.c.strokeStyle = style;
+    data.c.beginPath();
+    data.c.lineWidth = "3";
+    let [hx, hy] = mapToScreenCoords(loc[0], loc[1]);
+    data.c.rect(
+        hx,
+        hy,
+        data.tileWidth,
+        data.tileHeight
+    );
+    data.c.stroke();
 }
 
 // update coordinate display in the top left corner
-// Draws a border around the active image
-function drawHover(x, y, hold = false) {
-    let loc = screenToMapCoords(x, y)
-    let prev = data.previousHoverCoords
-
-    if (hold)
-        loc = prev;
-
-    // Square should remain stationary (held) in certain circumstances
-    if (hold || !(prev[0] == loc[0] && prev[1] == loc[1])) {
-        drawCanvas();
-        data.c.beginPath();
-        data.c.lineWidth = "3";
-        data.c.rect(
-            data.tileOriginX + loc[0] * data.tileWidth,
-            data.tileOriginY - loc[1] * data.tileHeight,
-            data.tileWidth,
-            data.tileHeight
-        );
-        data.c.stroke()
-        data.previousHoverCoords = loc
-    }
-}
-
-function updateCoordsDisplay(x, y) {
-    data.coordsElement.innerText = `(${x}, ${y})`;
-}
-
-// use screen coordinates to update the coord display
-function updateCoordsDisplayWithScreenCoords(sx, sy) {
-    let [x, y] = screenToMapCoords(sx, sy);
-    updateCoordsDisplay(x, y);
+function updateCoordsDisplay(x, y, screenCoords = true) {
+    let [newX, newY] = screenCoords ? screenToMapCoords(x, y) : [x, y];
+    data.coordsElement.innerText = `(${newX}, ${newY})`;
 }
 
 // update the coords display to the center of the screen
 function updateCoordsDisplayCenter() {
-    updateCoordsDisplayWithScreenCoords(data.mapWidth / 2, data.mapHeight / 2);
+    updateCoordsDisplay(data.mapWidth / 2, data.mapHeight / 2);
 }
 
 // translate screen coordinates (in pixels) to the tile at that location.
@@ -355,6 +419,14 @@ function screenToMapCoords(x, y) {
     ];
 }
 
+function mapToScreenCoords(x, y) {
+    return [
+        data.tileOriginX + x * data.tileWidth,
+        data.tileOriginY - y * data.tileHeight,
+    ];
+}
+    
+
 // add all the locations in the list
 // right now it just turns it into an association instead of a list for better
 // indexing and adds one generated property. more properties may be generated
@@ -365,6 +437,8 @@ function addLocations(locs) {
 
         const tile = document.createElement("img");
         tile.setAttribute("src", "img/" + loc.img + ".png");
+        // at this point the images haven't actually loaded yet.
+        // so we add this callback so that it adds each image when it does load.
         tile.onload = (e) => {
             drawCanvas();
         }
