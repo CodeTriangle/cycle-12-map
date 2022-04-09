@@ -26,6 +26,7 @@ html, body, #description {
 
 #description img {
     width: 100%;
+    outline: 3px solid #6C9;
 }
 
 #images {

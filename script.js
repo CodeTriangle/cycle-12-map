@@ -45,14 +45,12 @@ window.onload = (event) => {
     // on resize we tell the canvas we resized
     window.onresize = (e) => {
         resizeCanvas();
-        drawCanvas();
     }
 
     // on scroll wheel we zoom in.
     document.body.onwheel = (e) => {
         const factor = e.deltaY < 0 ? ZOOM_IN_FACTOR : ZOOM_OUT_FACTOR;
         scaleCanvas(factor, [e.clientX, e.clientY]);
-        drawCanvas();
     }
 
     // here begin a whole bunch of mouse functions.
@@ -74,7 +72,6 @@ window.onload = (event) => {
             case 1:
                 const touch = e.touches.item(0);
                 handleMouseDown(touch.clientX, touch.clientY);
-                drawCanvas();
                 break;
             case 2:
                 mouseOut();
@@ -94,8 +91,6 @@ window.onload = (event) => {
         updateCoordsDisplay(e.clientX, e.clientY, screenCoords=true);
 
         handleMouseMove(e.clientX, e.clientY);
-
-        drawCanvas();
     }
 
     // see above; this can mean either touch or scroll
@@ -123,7 +118,6 @@ window.onload = (event) => {
                 // and here is where we calculate the scale factor.
                 // it's just the ratio between the two.
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
-                drawCanvas();
 
                 // i don't actually use these variables, lol
                 // they might be useful in the future though
@@ -175,6 +169,7 @@ function mouseClick() {
     }
 
     previewTile(coords[0], coords[1]);
+
     drawCanvas();
 }
 
@@ -199,6 +194,8 @@ function previewTile() {
     } else {
         data.descElement.style.display = "none";
     }
+
+    drawCanvas();
 }
 
 // see function name. sets some data values.
@@ -208,18 +205,20 @@ function handleMouseDown(x, y) {
 
     data.mouseX = x;
     data.mouseY = y;
+
+    drawCanvas();
 }
 
 // the function to handle moving around the map.
 // basically just shifts the origin and sets some data values
 function handleMouseMove(x, y) {
+    if (data.mouseDown) {
+        data.tileOriginX += x - data.mouseX;
+        data.tileOriginY += y - data.mouseY;
+    }
+
     data.mouseX = x;
     data.mouseY = y;
-
-    if (!data.mouseDown) return;
-
-    data.tileOriginX += x - data.mouseX;
-    data.tileOriginY += y - data.mouseY;
 
     drawCanvas();
 }
@@ -277,6 +276,8 @@ function scaleCanvas(factor, center) {
         const otocy = cy - data.tileOriginY;
         data.tileOriginY = cy - otocy * newFactorY;
     }
+    
+    drawCanvas();
 }
 
 // resize the canvas to the screen size
@@ -295,6 +296,8 @@ function resizeCanvas() {
 
     data.mapWidth = newWidth;
     data.mapHeight = newHeight;
+
+    drawCanvas();
 }
 
 // draw on the canvas
@@ -318,7 +321,7 @@ function drawCanvas() {
 
     if (data.hasOwnProperty("previewedCoords")) {
         const [px, py] = data.previewedCoords;
-        drawHover(px, py, screenCoords=false, style="#FF0");
+        drawHover(px, py, screenCoords=false, style="#6C9");
     }
 
     drawHover(data.mouseX, data.mouseY);
