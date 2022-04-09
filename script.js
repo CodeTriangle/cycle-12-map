@@ -100,7 +100,8 @@ window.onload = (event) => {
         switch (e.touches.length) {
             case 1:
                 const touch = e.touches.item(0);
-                updateCoordsDisplayWith(touch.clientX, touch.clientY, screenCoords=true);
+                data.mouseDown = true;
+                updateCoordsDisplay(touch.clientX, touch.clientY, screenCoords=true);
                 handleMouseMove(touch.clientX, touch.clientY);
                 break;
             case 2:
@@ -219,7 +220,6 @@ function drawLineToPreview() {
     ty += .5 * data.tileHeight;
 
     const slope = (iy - ty) / (tx - ix);
-    console.log(slope);
 
     const xStaticEndpoint = tx + .5 * data.tileWidth * (ix < tx ? -1 : 1);
     const yStaticEndpoint = ty + .5 * data.tileHeight * (iy < ty ? -1 : 1);
