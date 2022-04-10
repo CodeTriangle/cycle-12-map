@@ -1,5 +1,7 @@
 # Cycle 12 Map
 
+**Online at https://codetriangle.github.io/cycle-12-map/**
+
 I built this for [the Twelfth Cycle](https://infinitenomic.miraheze.org/wiki/Cycle_12) of [Infinite Nomic](https://nomic.gay), a game of [Nomic](https://en.wikipedia.org/wiki/Nomic) where all game actions must be submitted by writing them down on a card and posting the image. Specifically, this site will track the map subgame in which players can submit custom art and another player can turn that into a location which will be added to a communal map.
 
 This is a very simple bit of software which displays a 2-dimensional grid of tiles. You can click to move, scroll to zoom, and get more information on a tile by clicking on it. It's even touch-friendly! This is all done in the [VanillaJS framework](http://vanilla-js.com/) using HTML Canvas.
