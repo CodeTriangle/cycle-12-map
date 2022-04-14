@@ -373,13 +373,13 @@ function drawCanvas() {
         );
     }
 
+    drawHover(data.mouseX, data.mouseY);
+
     if (data.hasOwnProperty("previewedCoords")) {
         const [px, py] = data.previewedCoords;
         drawHover(px, py, screenCoords=false, style="#6C9");
         drawLineToPreview();
     }
-
-    drawHover(data.mouseX, data.mouseY);
 }
 
 // Draws a border around the active image
