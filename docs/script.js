@@ -220,7 +220,7 @@ function previewTile() {
     if (data.locations.hasOwnProperty(coords)) {
         // everyone loves vanilla js dom modification
         const img = document.createElement("img");
-        img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
+        img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.jpg");
         data.descElement.appendChild(img);
     } else {
         data.descElement.style.display = "none";
@@ -466,7 +466,7 @@ function addLocations(locs) {
         data.locations[[loc.x, loc.y]] = loc;
 
         const tile = document.createElement("img");
-        tile.setAttribute("src", "img/" + loc.img + ".png");
+        tile.setAttribute("src", "img/" + loc.img + "-thumb.jpg");
         // at this point the images haven't actually loaded yet.
         // so we add this callback so that it adds each image when it does load.
         tile.onload = (e) => {
