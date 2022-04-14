@@ -9,7 +9,7 @@ convert "$1" "docs/img/$3.jpg"
 convert -scale 360x360 "$1" "docs/img/$3-thumb.jpg"
 convert "$2" "docs/img/$3-desc.jpg"
 
-echo <<EOF
+cat <<EOF
     {
         x: 0,
         y: 0,
