@@ -42,11 +42,6 @@ window.onload = (event) => {
     // update the coordinate display to the center of the screen
     updateCoordsDisplayCenter();
 
-    // mouse offset
-    // used for smoothing out the touch interface
-    data.mouseOffsetX = 0;
-    data.mouseOffsetY = 0;
-
     // on resize we tell the canvas we resized
     window.onresize = (e) => {
         resizeCanvas();
@@ -102,30 +97,16 @@ window.onload = (event) => {
     data.mapElement.addEventListener("touchmove", (e) => {
         e.preventDefault();
 
-        data.mouseDown = true;
         switch (e.touches.length) {
             case 1:
                 const touch = e.touches.item(0);
-
-                if (data.secondTouch != null) {
-                    data.mouseOffsetX = data.mouseX - touch.clientX;
-                    data.mouseOffsetY = data.mouseY - touch.clientY;
-                }
-
+                data.mouseDown = true;
                 updateCoordsDisplay(touch.clientX, touch.clientY, screenCoords=true);
-                handleMouseMove(touch.clientX - data.mouseOffsetX, touch.clientY - data.mouseOffsetY);
-                
-                data.firstTouch = touch;
-                data.secondTouch = null;
+                handleMouseMove(touch.clientX, touch.clientY);
                 break;
             case 2:
-                let first = e.touches.item(0);
-                let second = e.touches.item(1);
-
-                if (data.firstTouch.identifier == second.identifier) {
-                    let first = e.touches.item(1);
-                    let second = e.touches.item(0);
-                }
+                const first = e.touches.item(0);
+                const second = e.touches.item(1);
 
                 const newPinchDist = Math.sqrt(
                     (second.clientX - first.clientX) ** 2 + (second.clientY - first.clientY) ** 2
@@ -135,12 +116,6 @@ window.onload = (event) => {
                 const cx = (first.clientX + second.clientX) / 2;
                 const cy = (first.clientY + second.clientY) / 2;
 
-                if (data.secondTouch == null) {
-                    data.mouseOffsetX = cx - data.mouseX;
-                    data.mouseOffsetY = cy - data.mouseY;
-                }
-
-                handleMouseMove(cx - data.mouseOffsetX, cy - data.mouseOffsetY);
                 // and here is where we calculate the scale factor.
                 // it's just the ratio between the two.
                 scaleCanvas(newPinchDist / data.pinchDist, [cx, cy]);
@@ -173,15 +148,10 @@ window.onload = (event) => {
             mouseOut();
             const deltaTime = (new Date()).getTime() - data.mouseDownTime;
 
-            if (deltaTime < SHORT_CLICK_TIME) {
+            if (deltaTime < 250) {
                 mouseClick();
             }
         }
-
-        data.mouseOffsetX = 0;
-        data.mouseOffsetY = 0;
-        data.firstTouch = null;
-        data.secondTouch = null;
     });
 
     data.mapElement.onmouseleave = (e) => {
@@ -220,7 +190,7 @@ function previewTile() {
     if (data.locations.hasOwnProperty(coords)) {
         // everyone loves vanilla js dom modification
         const img = document.createElement("img");
-        img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.jpg");
+        img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.png");
         data.descElement.appendChild(img);
     } else {
         data.descElement.style.display = "none";
@@ -324,8 +294,8 @@ function scaleCanvas(factor, center) {
     // i should do something about that
     const [cx, cy] = center;
 
-    // data.mouseX = cx;
-    // data.mouseY = cy;
+    data.mouseX = cx;
+    data.mouseY = cy;
 
     // if the new width would exceed the max tile size, don't
     if (newWidth > MAX_TILE_SIZE) newWidth = MAX_TILE_SIZE;
@@ -466,7 +436,7 @@ function addLocations(locs) {
         data.locations[[loc.x, loc.y]] = loc;
 
         const tile = document.createElement("img");
-        tile.setAttribute("src", "img/" + loc.img + "-thumb.jpg");
+        tile.setAttribute("src", "img/" + loc.img + ".png");
         // at this point the images haven't actually loaded yet.
         // so we add this callback so that it adds each image when it does load.
         tile.onload = (e) => {
