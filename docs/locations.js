@@ -9,4 +9,9 @@ const locations = [
         y: 1,
         img: "goodwood",
     },
+    {
+        x: 1,
+        y: 0,
+        img: "quill-mill",
+    },
 ]
