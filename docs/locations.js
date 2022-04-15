@@ -14,4 +14,10 @@ const locations = [
         y: 0,
         img: "quill-mill",
     },
+
+    {
+        x: 1,
+        y: -1,
+        img: "a-field",
+    },
 ]
