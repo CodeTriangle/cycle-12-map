@@ -20,4 +20,9 @@ const locations = [
         y: -1,
         img: "a-field",
     },
+    {
+        x: 1,
+        y: -2,
+        img: "the-hole",
+    },
 ]
