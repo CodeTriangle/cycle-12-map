@@ -35,4 +35,9 @@ const locations = [
         y: 3,
         img: "trungle-jungle",
     },
+    {
+        x: 1,
+        y: 2,
+        img: "not-quite-abandoned-hut",
+    },
 ]
