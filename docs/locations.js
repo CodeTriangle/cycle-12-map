@@ -40,4 +40,14 @@ const locations = [
         y: 2,
         img: "not-quite-abandoned-hut",
     },
+    {
+        x: 1,
+        y: 3,
+        img: "runic-tower",
+    },
+    {
+        x: -1,
+        y: 0,
+        img: "animal-crossing",
+    },
 ]
