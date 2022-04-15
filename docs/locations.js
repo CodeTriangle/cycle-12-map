@@ -25,4 +25,14 @@ const locations = [
         y: -2,
         img: "the-hole",
     },
+    {
+        x: 0,
+        y: 2,
+        img: "tree-woods",
+    },
+    {
+        x: 0,
+        y: 3,
+        img: "trungle-jungle",
+    },
 ]
