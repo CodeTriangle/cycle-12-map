@@ -10,7 +10,7 @@ DESC="$2"
 IMG="$3"
 
 BASE_LOC="docs/img"
-EXT="jpg"
+EXT="webp"
 NORMAL_LOC="$BASE_LOC/$IMG.$EXT"
 THUMB_LOC="$BASE_LOC/$IMG-thumb.$EXT"
 DESC_LOC="$BASE_LOC/$IMG-desc.$EXT"

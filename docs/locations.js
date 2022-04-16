@@ -50,4 +50,9 @@ const locations = [
         y: 0,
         img: "animal-crossing",
     },
+    {
+        x: -1,
+        y: 1,
+        img: "still-mill",
+    },
 ]
