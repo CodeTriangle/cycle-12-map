@@ -70,4 +70,9 @@ const locations = [
         y: 2,
         img: "klio-house",
     },
+    {
+        x: 2,
+        y: -1,
+        img: "cemetary",
+    },
 ]
