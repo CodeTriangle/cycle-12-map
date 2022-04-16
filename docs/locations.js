@@ -55,4 +55,19 @@ const locations = [
         y: 1,
         img: "still-mill",
     },
+    {
+        x: -1,
+        y: 3,
+        img: "purple-mine",
+    },
+    {
+        x: -2,
+        y: 1,
+        img: "canard-castle",
+    },
+    {
+        x: -1,
+        y: 2,
+        img: "klio-house",
+    },
 ]

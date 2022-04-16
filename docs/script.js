@@ -191,6 +191,7 @@ function previewTile() {
         // everyone loves vanilla js dom modification
         const img = document.createElement("img");
         img.setAttribute("src", "img/" + data.locations[coords].img + "-desc.webp");
+        img.onload = (e) => drawCanvas();
         data.descElement.appendChild(img);
     } else {
         data.descElement.style.display = "none";
