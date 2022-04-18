@@ -75,4 +75,14 @@ const locations = [
         y: -1,
         img: "cemetary",
     },
+    {
+        x: -2,
+        y: 3,
+        img: "bleeding-hill",
+    },
+    {
+        x: -2,
+        y: 0,
+        img: "feather-fluff-field",
+    },
 ]
