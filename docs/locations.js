@@ -85,4 +85,19 @@ const locations = [
         y: 0,
         img: "feather-fluff-field",
     },
+    {
+        x: 0,
+        y: -1,
+        img: "pleasant-crossroads",
+    },
+    {
+        x: 1,
+        y: 1,
+        img: "titanprint-plains",
+    },
+    {
+        x: 0,
+        y: 4,
+        img: "tower-of-ferrets",
+    },
 ]
