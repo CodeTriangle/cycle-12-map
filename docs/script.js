@@ -72,6 +72,7 @@ window.onload = (event) => {
             case 1:
                 const touch = e.touches.item(0);
                 handleMouseDown(touch.clientX, touch.clientY);
+                updateCoordsDisplay(touch.clientX, touch.clientY, screenCoords=true);
                 break;
             case 2:
                 mouseOut();

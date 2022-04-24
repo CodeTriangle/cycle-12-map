@@ -100,4 +100,14 @@ const locations = [
         y: 4,
         img: "tower-of-ferrets",
     },
+    {
+        x: -2,
+        y: 2,
+        img: "beetwood-hollow",
+    },
+    {
+        x: 2,
+        y: 1,
+        img: "arcaegg",
+    },
 ]
