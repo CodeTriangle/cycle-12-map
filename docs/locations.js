@@ -110,4 +110,29 @@ const locations = [
         y: 1,
         img: "arcaegg",
     },
+    {
+        x: 1,
+        y: -3,
+        img: "floaters-grove",
+    },
+    {
+        x: -1,
+        y: -1,
+        img: "gnoom-hut",
+    },
+    {
+        x: 2,
+        y: 0,
+        img: "the-crossroads",
+    },
+    {
+        x: 2,
+        y: 2,
+        img: "the-knowing-tree",
+    },
+    {
+        x: 2,
+        y: -2,
+        img: "the-pyramid-of-iz",
+    },
 ]

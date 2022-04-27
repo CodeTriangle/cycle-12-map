@@ -8,6 +8,8 @@ fi
 NORMAL="$1"
 DESC="$2"
 IMG="$3"
+X="$4"
+Y="$5"
 
 BASE_LOC="docs/img"
 EXT="webp"
@@ -35,8 +37,8 @@ convert "$DESC" "$DESC_LOC"
 
 cat <<EOF
     {
-        x: 0,
-        y: 0,
+        x: $X,
+        y: $Y,
         img: "$IMG",
     },
 EOF
