@@ -135,4 +135,9 @@ const locations = [
         y: -2,
         img: "the-pyramid-of-iz",
     },
+    {
+        x: 0,
+        y: -2,
+        img: "church-of-the-hole",
+    },
 ]
