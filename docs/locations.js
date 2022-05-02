@@ -140,4 +140,19 @@ const locations = [
         y: -2,
         img: "church-of-the-hole",
     },
+    {
+        x: -1,
+        y: 4,
+        img: "porcupine-forest",
+    },
+    {
+        x: 3,
+        y: -2,
+        img: "evlas-peaks",
+    },
+    {
+        x: -2,
+        y: -1,
+        img: "mysterious-hand",
+    },
 ]
