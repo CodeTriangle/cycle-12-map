@@ -155,4 +155,9 @@ const locations = [
         y: -1,
         img: "mysterious-hand",
     },
+    {
+        x: -1,
+        y: -2,
+        img: "hengestone-lake",
+    },
 ]
