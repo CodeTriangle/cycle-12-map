@@ -163,6 +163,6 @@ const locations = [
     {
         x: -2,
         y: -2,
-        img: "blockface-mountain",
+        img: "blockface-monument",
     },
 ]
