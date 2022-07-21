@@ -160,4 +160,9 @@ const locations = [
         y: -2,
         img: "hengestone-lake",
     },
+    {
+        x: -2,
+        y: -2,
+        img: "blockface-mountain",
+    },
 ]
