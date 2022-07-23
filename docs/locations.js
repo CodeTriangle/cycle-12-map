@@ -165,4 +165,44 @@ const locations = [
         y: -2,
         img: "blockface-monument",
     },
+    {
+        x: 3,
+        y: 0,
+        img: "the-halfway-out",
+    },
+    {
+        x: 2,
+        y: 3,
+        img: "the-firewatch",
+    },
+    {
+        x: 3,
+        y: 1,
+        img: "haunted-hollow",
+    },
+    {
+        x: -3,
+        y: 1,
+        img: "overly-cautious-floodplain-house",
+    },
+    {
+        x: -3,
+        y: 3,
+        img: "mountains-of-mirth",
+    },
+    {
+        x: -2,
+        y: -3,
+        img: "escargantua",
+    },
+    {
+        x: -1,
+        y: -3,
+        img: "cerulean-cliffs",
+    },
+    {
+        x: -3,
+        y: -1,
+        img: "molten-meteor",
+    },
 ]
